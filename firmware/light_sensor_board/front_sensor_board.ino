@@ -196,6 +196,8 @@ void loop() {
         Serial.print(g_array_back[1]);
         Serial.print(",");
         Serial.print(g_array_back[2]);
+        Serial.print("  line_sensor_bin_data ");
+        Serial.print(line_sensor_bin_data,BIN);
         Serial.print("    distance_Serial_back ");
         Serial.println(distance_Serial[1]);
         print_text = "";
