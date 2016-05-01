@@ -185,7 +185,7 @@ void loop() {
       line_sensor_bin_data = BIN_DATA;
   //    analyse_defferent_light_digit = analyse_defferent_light_data();  //   Wrong is 1 | True is 0
       if (debug_line_sensor_data == HIGH) {
-        Serial.print(print_text);
+       /* Serial.print(print_text);
         Serial.print("   Wire_Read   ");
         Serial.print(Wire_Read);
         Serial.print("  calibration_counter:  ");
@@ -200,7 +200,12 @@ void loop() {
         Serial.print(line_sensor_bin_data,BIN);
         Serial.print("    distance_Serial_back ");
         Serial.println(distance_Serial[1]);
-        print_text = "";
+        print_text = "";*/
+        Serial.print(calibrating);
+        Serial.print("   counter: ");
+        Serial.print(calibration_counter);
+        Serial.print("   Wire_Read: ");
+        Serial.println(Wire_Read);
       }
     }
     L2 = bitRead(counter, 2);
@@ -257,7 +262,7 @@ void TSC_Callback() {
     }
 
     // calibrating
-    else if (calibrating == HIGH && Wire_Read > 0 && Wire_Read <= 3) {
+    else if (calibrating == HIGH && Wire_Read >= 0 && Wire_Read <= 11) {
       color_data_calibration();
   
     }
@@ -317,9 +322,7 @@ void TSC_Count2() {
 void requestEvent() { 
   byte i2c_sending[2];
   i2c_sending[0] = line_sensor_bin_data;
- // i2c_sending[1] = distance_Serial[0];
   i2c_sending[1] = distance_Serial[1];
-  //i2c_sending[3] = analyse_defferent_light_digit;
   Wire.write(i2c_sending, 2);
 }
 
@@ -329,7 +332,7 @@ void receiveEvent(int howMany) {
   Wire_Read = Wire.read();
   calibrating = HIGH;
   calibration_counter = calibration_counter_time;
-  if (Wire_Read == 4) {
+  if (Wire_Read == 11) {
     for (int i = 0; i <= 6 ; i++)	black_D[i] = 1023;
     for (int i = 0; i <= 6 ; i++)	white_D[i] = 0;
   }
@@ -397,7 +400,6 @@ void color_data_calibration() {
   else if (Wire_Read == 3) {                                    //color_1 calabration              
     if (calibration_counter > 0) {
       for (int i = 0; i <= 2; i++) {
-        //get_color_senor_value();
         cumulative_calibration_data[5][i] += g_array_back[i];
       }
       calibration_counter--;
