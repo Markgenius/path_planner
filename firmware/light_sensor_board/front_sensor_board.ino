@@ -42,8 +42,7 @@
 #define S2     4
 #define S3     5
 //filter control of colo sensor, 00 = RED, 01 = GREEN, 10 = BLUE, 11 = no filter
-#define color_sensor_output_right    3
-#define color_sensor_output_left    2
+#define color_sensor_output_back    3
 #define multiplexer_counter_S2   10                  //control the ic
 #define multiplexer_counter_S1   11                  //control the ic
 #define multiplexer_counter_S0   12                  //control the ic
@@ -68,25 +67,17 @@
 
 
 
-int   calibration_color_1_left[3] = {43, 77, 55};
-int   calibration_color_1_right[3] = {39, 81, 30};
-int   calibration_color_2_left[3] = {43, 77, 55};
-int   calibration_color_2_right[3] = {39, 81, 30};
-int   calibration_color_3_left[3] = {43, 77, 55};
-int   calibration_color_3_right[3] = {39, 81, 30};
-int   calibration_color_4_left[3] = {43, 77, 55};
-int   calibration_color_4_right[3] = {39, 81, 30};
-int   calibration_color_5_left[3] = {43, 77, 55};
-int   calibration_color_5_right[3] = {39, 81, 30};
-int   calibration_color_6_left[3] = {43, 77, 55};
-int   calibration_color_6_right[3] = {39, 81, 30};
-int   calibration_color_7_left[3] = {43, 77, 55};
-int   calibration_color_7_right[3] = {39, 81, 30};
 
-int   calibration_white_left[3] = {27, 27, 27};
-int   calibration_white_right[3] = {30, 30, 30};
-int   calibration_black_left[3] = {3, 3, 3};
-int   calibration_black_right[3] = {4, 4, 4};
+int   calibration_color_1_back[3] = {39, 81, 30};
+int   calibration_color_2_back[3] = {39, 81, 30};
+int   calibration_color_3_back[3] = {39, 81, 30};
+int   calibration_color_4_back[3] = {39, 81, 30};
+int   calibration_color_5_back[3] = {39, 81, 30};
+int   calibration_color_6_back[3] = {39, 81, 30};
+int   calibration_color_7_back[3] = {39, 81, 30};
+
+int   calibration_white_back[3] = {30, 30, 30};
+int   calibration_black_back[3] = {4, 4, 4};
 int   white_D[7] = {59, 61, 61, 71, 59, 62, 86};
 int   black_D[7] = {110, 108, 102, 120, 93, 104, 121};
 long  cumulative_calibration_data[18][3];
@@ -101,14 +92,11 @@ byte  BIN_DATA, line_sensor_bin_data, Wire_Read;
 //byte  analyse_defferent_light_digit;
 byte  distance_Serial[2];
 unsigned long timer[3];
-int   RGB_value_left[3];
-int   g_count_left = 0;    // count the frequecy
-int   g_array_left[3];     // store the RGB value
 int   g_flag = 0;     // filter of RGB queue
-int   RGB_value_right[3];
+int   RGB_value_back[3];
 int   g_array_temporarily[3][2];
-int   g_count_right = 0;    // count the frequecy
-int   g_array_right[3];     // store the RGB value
+int   g_count_back = 0;    // count the frequecy
+int   g_array_back[3];     // store the RGB value
 
 
 //light_sensor Begin
@@ -131,21 +119,23 @@ void setup() {
   Timer1.attachInterrupt(TSC_Callback);
   pinMode(S2, OUTPUT);
   pinMode(S3, OUTPUT);
-  pinMode(color_sensor_output_right, INPUT);
-  pinMode(color_sensor_output_left, INPUT);
-  attachInterrupt(digitalPinToInterrupt(color_sensor_output_right), TSC_Count2, RISING);
-  attachInterrupt(digitalPinToInterrupt(color_sensor_output_left), TSC_Count, RISING);
+  pinMode(color_sensor_output_back, INPUT);
+  attachInterrupt(digitalPinToInterrupt(color_sensor_output_back), TSC_Count2, RISING);
 
   //read data from EEPROM
     for (byte i = 0; i <= 12 ; i += 2)    EEPROM.get(i, white_D[i / 2]);
     for (byte i = 15; i <= 27 ; i += 2)   EEPROM.get(i, black_D[(i - 15) / 2]);
-    for (byte i = 30; i <= 34 ; i += 2)   EEPROM.get(i, calibration_white_left[(i - 30) / 2]);
-    for (byte i = 37; i <= 41 ; i += 2)   EEPROM.get(i, calibration_black_left[(i - 37) / 2]);
-    for (byte i = 44; i <= 48 ; i += 2)   EEPROM.get(i, calibration_color_1_left[(i - 44) / 2]);
 
-    for (byte i = 51; i <= 55 ; i += 2)   EEPROM.get(i, calibration_white_right[(i - 51) / 2]);
-    for (byte i = 58; i <= 62 ; i += 2)   EEPROM.get(i, calibration_black_right[(i - 58) / 2]);
-    for (byte i = 65; i <= 69 ; i += 2)   EEPROM.get(i, calibration_color_1_right[(i - 65) / 2]);
+    for (byte i = 51; i <= 55 ; i += 2)   EEPROM.get(i, calibration_white_back[(i - 51) / 2]);
+    for (byte i = 58; i <= 62 ; i += 2)   EEPROM.get(i, calibration_black_back[(i - 58) / 2]);
+    for (byte i = 65; i <= 69 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 65) / 2]);
+    for (byte i = 72; i <= 76 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 72) / 2]);
+    for (byte i = 79; i <= 83 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 79) / 2]);
+    for (byte i = 86; i <= 90 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 86) / 2]);
+    for (byte i = 93; i <= 97 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 93) / 2]);
+    for (byte i = 100; i <= 104 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 100) / 2]);
+    for (byte i = 107; i <= 111 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 107) / 2]);
+
   pinMode(multiplexer_counter_S2, OUTPUT);
   pinMode(multiplexer_counter_S1, OUTPUT);
   pinMode(multiplexer_counter_S0, OUTPUT);
@@ -195,52 +185,27 @@ void loop() {
       line_sensor_bin_data = BIN_DATA;
   //    analyse_defferent_light_digit = analyse_defferent_light_data();  //   Wrong is 1 | True is 0
       if (debug_line_sensor_data == HIGH) {
-        Serial.print(print_text);
-        Serial.print("   led:");
-        Serial.print(calibrating);
+       /* Serial.print(print_text);
         Serial.print("   Wire_Read   ");
         Serial.print(Wire_Read);
         Serial.print("  calibration_counter:  ");
         Serial.print(calibration_counter);
-        Serial.print("  left ");
-        Serial.print(g_array_left[0]);
+        Serial.print("  array_back ");
+        Serial.print(g_array_back[0]);
         Serial.print(",");
-        Serial.print(g_array_left[1]);
+        Serial.print(g_array_back[1]);
         Serial.print(",");
-        Serial.print(g_array_left[2]);
-        Serial.print("  right ");
-        Serial.print(g_array_right[0]);
-        Serial.print(",");
-        Serial.print(g_array_right[1]);
-        Serial.print(",");
-        Serial.print(g_array_right[2]);
-        Serial.print("    distance_Serial_left ");
-        Serial.print(distance_Serial[0]);
-        Serial.print("  left_distance:  ");
-        Serial.print(W_distance[0]);
-        Serial.print(",");
-        Serial.print(color_1_distance[0]);
-        Serial.print(",");
-        Serial.print(B_distance[0]);
-        Serial.print("  right_distance:  ");
-        Serial.print(W_distance[1]);
-        Serial.print(",");
-        Serial.print(color_1_distance[1]);
-        Serial.print(",");
-        Serial.print(B_distance[1]);
-        Serial.print("   ");
-        Serial.print(calibration_color_1_left[0]);
-        Serial.print(" ");
-        Serial.print(calibration_color_1_left[1]);
-        Serial.print(" ");
-        Serial.print(calibration_color_1_left[2]);
-        Serial.print("   ");
-        Serial.print(calibration_color_1_right[0]);
-        Serial.print(" ");
-        Serial.print(calibration_color_1_right[1]);
-        Serial.print(" ");
-        Serial.println(calibration_color_1_right[2]);
-        print_text = "";
+        Serial.print(g_array_back[2]);
+        Serial.print("  line_sensor_bin_data ");
+        Serial.print(line_sensor_bin_data,BIN);
+        Serial.print("    distance_Serial_back ");
+        Serial.println(distance_Serial[1]);
+        print_text = "";*/
+        Serial.print(calibrating);
+        Serial.print("   counter: ");
+        Serial.print(calibration_counter);
+        Serial.print("   Wire_Read: ");
+        Serial.println(Wire_Read);
       }
     }
     L2 = bitRead(counter, 2);
@@ -258,8 +223,7 @@ void loop() {
 
 void TSC_Callback() {
   if (g_flag == 0) {                       //Filter without Red
-    g_count_left = 0;
-    g_count_right = 0;
+    g_count_back = 0;
     g_flag ++;
     digitalWrite(S2, LOW);
     digitalWrite(S3, LOW);
@@ -267,10 +231,8 @@ void TSC_Callback() {
   }
 
   else if (g_flag == 1) {                     //Filter without Green
-    g_array_temporarily[0][0] = g_count_left;
-    g_array_temporarily[0][1] = g_count_right;
-    g_count_left = 0;
-    g_count_right = 0;
+    g_array_temporarily[0][1] = g_count_back;
+    g_count_back = 0;
     g_flag ++;
     digitalWrite(S2, HIGH);
     digitalWrite(S3, HIGH);
@@ -278,10 +240,8 @@ void TSC_Callback() {
   }
 
   else if (g_flag == 2) {                       //Filter without Blue
-    g_array_temporarily[1][0] = g_count_left;
-    g_array_temporarily[1][1] = g_count_right;
-    g_count_left = 0;
-    g_count_right = 0;
+    g_array_temporarily[1][1] = g_count_back;
+    g_count_back = 0;
     g_flag ++;
     digitalWrite(S2, LOW);
     digitalWrite(S3, HIGH);
@@ -289,24 +249,20 @@ void TSC_Callback() {
   }
 
   else if (g_flag == 3) {
-    g_array_temporarily[2][0] = g_count_left;
-    g_array_temporarily[2][1] = g_count_right;
-    g_count_left = 0;
-    g_count_right = 0;
+    g_array_temporarily[2][1] = g_count_back;
+    g_count_back = 0;
     for (int i = 0; i <= 2; i++) {
-      g_array_left[i] = g_array_temporarily[i][0];
-      g_array_right[i] = g_array_temporarily[i][1];
+      g_array_back[i] = g_array_temporarily[i][1];
     }
 
     // without calibrating
     if (calibrating == LOW) {
       get_color_senor_value();
-      analyse_color_distances();
 
     }
 
     // calibrating
-    else if (calibrating == HIGH && Wire_Read > 0 && Wire_Read <= 3) {
+    else if (calibrating == HIGH && Wire_Read >= 0 && Wire_Read <= 11) {
       color_data_calibration();
   
     }
@@ -319,39 +275,15 @@ void TSC_Callback() {
 
 
 void get_color_senor_value() {
-  for (int i = 0; i <= 2; i++) {
-    RGB_value_left[i] = map(g_array_left[i], calibration_black_left[i], calibration_white_left[i], 0, 255);
-    RGB_value_right[i] = map(g_array_right[i], calibration_black_right[i], calibration_white_right[i], 0, 255);
-  }
-}
-
-void analyse_color_distances() {
-
-  W_distance[0] = (g_array_left[0] - calibration_white_left[0]) * (g_array_left[0] - calibration_white_left[0]) + (g_array_left[1] - calibration_white_left[1]) * (g_array_left[1] - calibration_white_left[1]) + (g_array_left[2] - calibration_white_left[2]) * (g_array_left[2] - calibration_white_left[2]);
-  B_distance[0] = (g_array_left[0] - calibration_black_left[0]) * (g_array_left[0] - calibration_black_left[0]) + (g_array_left[1] - calibration_black_left[1]) * (g_array_left[1] - calibration_black_left[1]) + (g_array_left[2] - calibration_black_left[2]) * (g_array_left[2] - calibration_black_left[2]);
-  color_1_distance[0] = (g_array_left[0] - calibration_color_1_left[0]) * (g_array_left[0] - calibration_color_1_left[0]) + (g_array_left[1] - calibration_color_1_left[1]) * (g_array_left[1] - calibration_color_1_left[1]) + (g_array_left[2] - calibration_color_1_left[2]) * (g_array_left[2] - calibration_color_1_left[2]);
-
-  if ( W_distance[0] <= 200 && W_distance[0] >= -200) {
-    distance_Serial[0] = 1;
-  }
-  else if ( color_1_distance[0] <= 30 && color_1_distance[0] >= -30) {
-    distance_Serial[0] = 2;
-  }
-  else if ( B_distance[0] <= 200  && B_distance[0] >= -200) {
-    distance_Serial[0] = 3;
-  }
-
-
-
-  W_distance[1] = (g_array_right[0] - calibration_white_right[0]) * (g_array_right[0] - calibration_white_right[0]) + (g_array_right[1] - calibration_white_right[1]) * (g_array_right[1] - calibration_white_right[1]) + (g_array_right[2] - calibration_white_right[2]) * (g_array_right[2] - calibration_white_right[2]);
-  B_distance[1] = (g_array_right[0] - calibration_black_right[0]) * (g_array_right[0] - calibration_black_right[0]) + (g_array_right[1] - calibration_black_right[1]) * (g_array_right[1] - calibration_black_right[1]) + (g_array_right[2] - calibration_black_right[2]) * (g_array_right[2] - calibration_black_right[2]);
-  color_1_distance[1] = (g_array_right[0] - calibration_color_1_right[0]) * (g_array_right[0] - calibration_color_1_right[0]) + (g_array_right[1] - calibration_color_1_right[1]) * (g_array_right[1] - calibration_color_1_right[1]) + (g_array_right[2] - calibration_color_1_right[2]) * (g_array_right[2] - calibration_color_1_right[2]);
-  color_2_distance[1] = (g_array_right[0] - calibration_color_2_right[0]) * (g_array_right[0] - calibration_color_2_right[0]) + (g_array_right[1] - calibration_color_2_right[1]) * (g_array_right[1] - calibration_color_2_right[1]) + (g_array_right[2] - calibration_color_2_right[2]) * (g_array_right[2] - calibration_color_2_right[2]);
-  color_3_distance[1] = (g_array_right[0] - calibration_color_3_right[0]) * (g_array_right[0] - calibration_color_3_right[0]) + (g_array_right[1] - calibration_color_3_right[1]) * (g_array_right[1] - calibration_color_3_right[1]) + (g_array_right[2] - calibration_color_3_right[2]) * (g_array_right[2] - calibration_color_3_right[2]);
-  color_4_distance[1] = (g_array_right[0] - calibration_color_4_right[0]) * (g_array_right[0] - calibration_color_4_right[0]) + (g_array_right[1] - calibration_color_4_right[1]) * (g_array_right[1] - calibration_color_4_right[1]) + (g_array_right[2] - calibration_color_4_right[2]) * (g_array_right[2] - calibration_color_4_right[2]);
-  color_5_distance[1] = (g_array_right[0] - calibration_color_5_right[0]) * (g_array_right[0] - calibration_color_5_right[0]) + (g_array_right[1] - calibration_color_5_right[1]) * (g_array_right[1] - calibration_color_5_right[1]) + (g_array_right[2] - calibration_color_5_right[2]) * (g_array_right[2] - calibration_color_5_right[2]);
-  color_6_distance[1] = (g_array_right[0] - calibration_color_6_right[0]) * (g_array_right[0] - calibration_color_6_right[0]) + (g_array_right[1] - calibration_color_6_right[1]) * (g_array_right[1] - calibration_color_6_right[1]) + (g_array_right[2] - calibration_color_6_right[2]) * (g_array_right[2] - calibration_color_6_right[2]);
-  color_7_distance[1] = (g_array_right[0] - calibration_color_7_right[0]) * (g_array_right[0] - calibration_color_7_right[0]) + (g_array_right[1] - calibration_color_7_right[1]) * (g_array_right[1] - calibration_color_7_right[1]) + (g_array_right[2] - calibration_color_7_right[2]) * (g_array_right[2] - calibration_color_7_right[2]);
+  W_distance[1] = (g_array_back[0] - calibration_white_back[0]) * (g_array_back[0] - calibration_white_back[0]) + (g_array_back[1] - calibration_white_back[1]) * (g_array_back[1] - calibration_white_back[1]) + (g_array_back[2] - calibration_white_back[2]) * (g_array_back[2] - calibration_white_back[2]);
+  B_distance[1] = (g_array_back[0] - calibration_black_back[0]) * (g_array_back[0] - calibration_black_back[0]) + (g_array_back[1] - calibration_black_back[1]) * (g_array_back[1] - calibration_black_back[1]) + (g_array_back[2] - calibration_black_back[2]) * (g_array_back[2] - calibration_black_back[2]);
+  color_1_distance[1] = (g_array_back[0] - calibration_color_1_back[0]) * (g_array_back[0] - calibration_color_1_back[0]) + (g_array_back[1] - calibration_color_1_back[1]) * (g_array_back[1] - calibration_color_1_back[1]) + (g_array_back[2] - calibration_color_1_back[2]) * (g_array_back[2] - calibration_color_1_back[2]);
+  color_2_distance[1] = (g_array_back[0] - calibration_color_2_back[0]) * (g_array_back[0] - calibration_color_2_back[0]) + (g_array_back[1] - calibration_color_2_back[1]) * (g_array_back[1] - calibration_color_2_back[1]) + (g_array_back[2] - calibration_color_2_back[2]) * (g_array_back[2] - calibration_color_2_back[2]);
+  color_3_distance[1] = (g_array_back[0] - calibration_color_3_back[0]) * (g_array_back[0] - calibration_color_3_back[0]) + (g_array_back[1] - calibration_color_3_back[1]) * (g_array_back[1] - calibration_color_3_back[1]) + (g_array_back[2] - calibration_color_3_back[2]) * (g_array_back[2] - calibration_color_3_back[2]);
+  color_4_distance[1] = (g_array_back[0] - calibration_color_4_back[0]) * (g_array_back[0] - calibration_color_4_back[0]) + (g_array_back[1] - calibration_color_4_back[1]) * (g_array_back[1] - calibration_color_4_back[1]) + (g_array_back[2] - calibration_color_4_back[2]) * (g_array_back[2] - calibration_color_4_back[2]);
+  color_5_distance[1] = (g_array_back[0] - calibration_color_5_back[0]) * (g_array_back[0] - calibration_color_5_back[0]) + (g_array_back[1] - calibration_color_5_back[1]) * (g_array_back[1] - calibration_color_5_back[1]) + (g_array_back[2] - calibration_color_5_back[2]) * (g_array_back[2] - calibration_color_5_back[2]);
+  color_6_distance[1] = (g_array_back[0] - calibration_color_6_back[0]) * (g_array_back[0] - calibration_color_6_back[0]) + (g_array_back[1] - calibration_color_6_back[1]) * (g_array_back[1] - calibration_color_6_back[1]) + (g_array_back[2] - calibration_color_6_back[2]) * (g_array_back[2] - calibration_color_6_back[2]);
+  color_7_distance[1] = (g_array_back[0] - calibration_color_7_back[0]) * (g_array_back[0] - calibration_color_7_back[0]) + (g_array_back[1] - calibration_color_7_back[1]) * (g_array_back[1] - calibration_color_7_back[1]) + (g_array_back[2] - calibration_color_7_back[2]) * (g_array_back[2] - calibration_color_7_back[2]);
 
   if ( W_distance[1] <= 200 && W_distance[1] >= -200) {
     distance_Serial[1] = 1;
@@ -382,22 +314,15 @@ void analyse_color_distances() {
   }
 
 }
-
-
-void TSC_Count() {
-  g_count_left ++ ;
-}
 void TSC_Count2() {
-  g_count_right ++ ;
+  g_count_back ++ ;
 }
 
 
 void requestEvent() { 
   byte i2c_sending[2];
   i2c_sending[0] = line_sensor_bin_data;
- // i2c_sending[1] = distance_Serial[0];
   i2c_sending[1] = distance_Serial[1];
-  //i2c_sending[3] = analyse_defferent_light_digit;
   Wire.write(i2c_sending, 2);
 }
 
@@ -407,21 +332,24 @@ void receiveEvent(int howMany) {
   Wire_Read = Wire.read();
   calibrating = HIGH;
   calibration_counter = calibration_counter_time;
-  if (Wire_Read == 4) {
+  if (Wire_Read == 11) {
     for (int i = 0; i <= 6 ; i++)	black_D[i] = 1023;
     for (int i = 0; i <= 6 ; i++)	white_D[i] = 0;
   }
   if (Wire_Read == 11) {
 
-    for (byte i = 0; i <= 12 ; i += 2) 		EEPROM.put(i, white_D[i / 2]);
-    for (byte i = 15; i <= 27 ; i += 2) 	EEPROM.put(i, black_D[(i - 15) / 2]);
-    for (byte i = 30; i <= 34 ; i += 2)		EEPROM.put(i, calibration_white_left[(i - 30) / 2]);
-    for (byte i = 37; i <= 41 ; i += 2)		EEPROM.put(i, calibration_black_left[(i - 37) / 2]);
-    for (byte i = 44; i <= 48 ; i += 2)   EEPROM.put(i, calibration_color_1_left[(i - 44) / 2]);
+    for (byte i = 0; i <= 12 ; i += 2)    EEPROM.put(i, white_D[i / 2]);
+    for (byte i = 15; i <= 27 ; i += 2)   EEPROM.put(i, black_D[(i - 15) / 2]);
 
-    for (byte i = 51; i <= 55 ; i += 2)   EEPROM.put(i, calibration_white_right[(i - 51) / 2]);
-    for (byte i = 58; i <= 62 ; i += 2)   EEPROM.put(i, calibration_black_right[(i - 58) / 2]);
-    for (byte i = 65; i <= 69 ; i += 2)   EEPROM.put(i, calibration_color_1_right[(i - 65) / 2]);
+    for (byte i = 51; i <= 55 ; i += 2)   EEPROM.put(i, calibration_white_back[(i - 51) / 2]);
+    for (byte i = 58; i <= 62 ; i += 2)   EEPROM.put(i, calibration_black_back[(i - 58) / 2]);
+    for (byte i = 65; i <= 69 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 65) / 2]);
+    for (byte i = 72; i <= 76 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 72) / 2]);
+    for (byte i = 79; i <= 83 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 79) / 2]);
+    for (byte i = 86; i <= 90 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 86) / 2]);
+    for (byte i = 93; i <= 97 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 93) / 2]);
+    for (byte i = 100; i <= 104 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 100) / 2]);
+    for (byte i = 107; i <= 111 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 107) / 2]);
 
 
     calibrating = LOW;
@@ -438,16 +366,13 @@ void color_data_calibration() {
   if (Wire_Read == 1) {
     if (calibration_counter > 0) {                              //White calabration
       for (int i = 0; i <= 2; i++) {
-        cumulative_calibration_data[0][i] += g_array_left[i];
-        cumulative_calibration_data[1][i] += g_array_right[i];
+        cumulative_calibration_data[1][i] += g_array_back[i];
       }
       calibration_counter--;
     }
     else {
       for (int i = 0; i <= 2; i++) {
-        calibration_white_left[i] = cumulative_calibration_data[0][i] / calibration_counter_time;
-        calibration_white_right[i] = cumulative_calibration_data[1][i] / calibration_counter_time;
-        cumulative_calibration_data[0][i] = 0;
+        calibration_white_back[i] = cumulative_calibration_data[1][i] / calibration_counter_time;
         cumulative_calibration_data[1][i] = 0;
       }
       calibrating = LOW;
@@ -458,16 +383,13 @@ void color_data_calibration() {
   else if (Wire_Read == 2) {                                    //Black calabration
     if (calibration_counter > 0) {
       for (int i = 0; i <= 2; i++) {
-        cumulative_calibration_data[2][i] += g_array_left[i];
-        cumulative_calibration_data[3][i] += g_array_right[i];
+        cumulative_calibration_data[3][i] += g_array_back[i];
       }
       calibration_counter--;
     }
     else {
       for (int i = 0; i <= 2; i++) {
-        calibration_black_left[i] = cumulative_calibration_data[2][i] / calibration_counter_time;
-        calibration_black_right[i] = cumulative_calibration_data[3][i] / calibration_counter_time;
-        cumulative_calibration_data[2][i] = 0;
+        calibration_black_back[i] = cumulative_calibration_data[3][i] / calibration_counter_time;
         cumulative_calibration_data[3][i] = 0;
       }
       calibrating = LOW;
@@ -478,17 +400,13 @@ void color_data_calibration() {
   else if (Wire_Read == 3) {                                    //color_1 calabration              
     if (calibration_counter > 0) {
       for (int i = 0; i <= 2; i++) {
-        //get_color_senor_value();
-        cumulative_calibration_data[4][i] += g_array_left[i];
-        cumulative_calibration_data[5][i] += g_array_right[i];
+        cumulative_calibration_data[5][i] += g_array_back[i];
       }
       calibration_counter--;
     }
     else {
       for (int i = 0; i <= 2; i++) {
-        calibration_color_1_left[i] = cumulative_calibration_data[4][i] / calibration_counter_time;
-        calibration_color_1_right[i] = cumulative_calibration_data[5][i] / calibration_counter_time;
-        cumulative_calibration_data[4][i] = 0;
+        calibration_color_1_back[i] = cumulative_calibration_data[5][i] / calibration_counter_time;
         cumulative_calibration_data[5][i] = 0;
       }
       calibrating = LOW;
@@ -499,17 +417,13 @@ void color_data_calibration() {
   else if(Wire_Read == 4) {                                     //color_2 calabration
     if (calibration_counter > 0) {
       for (int i = 0; i <= 2; i++) {
-        //get_color_senor_value();
-        cumulative_calibration_data[6][i] += g_array_left[i];
-        cumulative_calibration_data[7][i] += g_array_right[i];
+        cumulative_calibration_data[7][i] += g_array_back[i];
       }
       calibration_counter--;
     }
     else {
       for (int i = 0; i <= 2; i++) {
-        calibration_color_2_left[i] = cumulative_calibration_data[6][i] / calibration_counter_time;
-        calibration_color_2_right[i] = cumulative_calibration_data[7][i] / calibration_counter_time;
-        cumulative_calibration_data[6][i] = 0;
+        calibration_color_2_back[i] = cumulative_calibration_data[7][i] / calibration_counter_time;
         cumulative_calibration_data[7][i] = 0;
       }
       calibrating = LOW;
@@ -520,17 +434,13 @@ void color_data_calibration() {
   else if(Wire_Read == 5) {                                     //color_3 calabration
     if (calibration_counter > 0) {
       for (int i = 0; i <= 2; i++) {
-        //get_color_senor_value();
-        cumulative_calibration_data[8][i] += g_array_left[i];
-        cumulative_calibration_data[9][i] += g_array_right[i];
+        cumulative_calibration_data[9][i] += g_array_back[i];
       }
       calibration_counter--;
     }
     else {
       for (int i = 0; i <= 2; i++) {
-        calibration_color_3_left[i] = cumulative_calibration_data[8][i] / calibration_counter_time;
-        calibration_color_3_right[i] = cumulative_calibration_data[9][i] / calibration_counter_time;
-        cumulative_calibration_data[8][i] = 0;
+        calibration_color_3_back[i] = cumulative_calibration_data[9][i] / calibration_counter_time;
         cumulative_calibration_data[9][i] = 0;
       }
       calibrating = LOW;
@@ -541,16 +451,13 @@ void color_data_calibration() {
   else if(Wire_Read == 6) {                                     //color_4 calabration
     if (calibration_counter > 0) {
       for (int i = 0; i <= 2; i++) {
-        //get_color_senor_value();
-        cumulative_calibration_data[10][i] += g_array_left[i];
-        cumulative_calibration_data[11][i] += g_array_right[i];
+        cumulative_calibration_data[11][i] += g_array_back[i];
       }
       calibration_counter--;
     }
     else {
       for (int i = 0; i <= 2; i++) {
-        calibration_color_4_left[i] = cumulative_calibration_data[10][i] / calibration_counter_time;
-        calibration_color_4_right[i] = cumulative_calibration_data[11][i] / calibration_counter_time;
+        calibration_color_4_back[i] = cumulative_calibration_data[11][i] / calibration_counter_time;
         cumulative_calibration_data[10][i] = 0;
         cumulative_calibration_data[11][i] = 0;
       }
@@ -563,16 +470,13 @@ void color_data_calibration() {
     if (calibration_counter > 0) {
       for (int i = 0; i <= 2; i++) {
         //get_color_senor_value();
-        cumulative_calibration_data[12][i] += g_array_left[i];
-        cumulative_calibration_data[13][i] += g_array_right[i];
+        cumulative_calibration_data[13][i] += g_array_back[i];
       }
       calibration_counter--;
     }
     else {
       for (int i = 0; i <= 2; i++) {
-        calibration_color_5_left[i] = cumulative_calibration_data[12][i] / calibration_counter_time;
-        calibration_color_5_right[i] = cumulative_calibration_data[13][i] / calibration_counter_time;
-        cumulative_calibration_data[12][i] = 0;
+        calibration_color_5_back[i] = cumulative_calibration_data[13][i] / calibration_counter_time;
         cumulative_calibration_data[13][i] = 0;
       }
       calibrating = LOW;
@@ -584,16 +488,13 @@ void color_data_calibration() {
     if (calibration_counter > 0) {
       for (int i = 0; i <= 2; i++) {
         //get_color_senor_value();
-        cumulative_calibration_data[14][i] += g_array_left[i];
-        cumulative_calibration_data[15][i] += g_array_right[i];
+        cumulative_calibration_data[15][i] += g_array_back[i];
       }
       calibration_counter--;
     }
     else {
       for (int i = 0; i <= 2; i++) {
-        calibration_color_6_left[i] = cumulative_calibration_data[14][i] / calibration_counter_time;
-        calibration_color_6_right[i] = cumulative_calibration_data[15][i] / calibration_counter_time;
-        cumulative_calibration_data[14][i] = 0;
+        calibration_color_6_back[i] = cumulative_calibration_data[15][i] / calibration_counter_time;
         cumulative_calibration_data[15][i] = 0;
       }
       calibrating = LOW;
@@ -605,16 +506,13 @@ void color_data_calibration() {
     if (calibration_counter > 0) {
       for (int i = 0; i <= 2; i++) {
         //get_color_senor_value();
-        cumulative_calibration_data[16][i] += g_array_left[i];
-        cumulative_calibration_data[17][i] += g_array_right[i];
+        cumulative_calibration_data[17][i] += g_array_back[i];
       }
       calibration_counter--;
     }
     else {
       for (int i = 0; i <= 2; i++) {
-        calibration_color_7_left[i] = cumulative_calibration_data[16][i] / calibration_counter_time;
-        calibration_color_7_right[i] = cumulative_calibration_data[17][i] / calibration_counter_time;
-        cumulative_calibration_data[16][i] = 0;
+        calibration_color_7_back[i] = cumulative_calibration_data[17][i] / calibration_counter_time;
         cumulative_calibration_data[17][i] = 0;
       }
       calibrating = LOW;
@@ -624,19 +522,3 @@ void color_data_calibration() {
   }
 
   
-
-
-
-
-
-
-/*bool analyse_defferent_light_data() {
-  bool _analyse_defferent_light_digit;
-  if (line_sensor_bin_data == B00000000 ) {
-    _analyse_defferent_light_digit = 1;
-  }
-  else _analyse_defferent_light_digit = 0;
-
-  return _analyse_defferent_light_digit;
-}
-*/
