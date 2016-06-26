@@ -34,15 +34,17 @@
 	Desc:          	using I2C to return the sensor data
 	-----------------------------------------------------------------------*/
 
-#include <TimerOne.h>
+//#include <TimerOne.h>
 #include <EEPROM.h>
 #include <Wire.h>
 
 //pin-------------
+/*
 #define S2     4
 #define S3     5
+*/
 //filter control of colo sensor, 00 = RED, 01 = GREEN, 10 = BLUE, 11 = no filter
-#define color_sensor_output_back    3
+//#define color_sensor_output_back    3
 #define multiplexer_counter_S2   10                  //control the ic
 #define multiplexer_counter_S1   11                  //control the ic
 #define multiplexer_counter_S0   12                  //control the ic
@@ -60,14 +62,15 @@
 
 //configuration-------------
 #define i2c_address_of_this_board 0x01
-#define multiplexer_time_step  10                    //the analyse light data delaytime
-#define debug_line_sensor_data 1
+#define multiplexer_time_step  1                    //the analyse light data delaytime
+#define debug_line_sensor_data HIGH
 #define calibration_counter_time 500
+#define calibration_counter_time_white 3000
 
 
 
 
-
+/*
 int   calibration_color_1_back[3] = {39, 81, 30};
 int   calibration_color_2_back[3] = {39, 81, 30};
 int   calibration_color_3_back[3] = {39, 81, 30};
@@ -78,10 +81,12 @@ int   calibration_color_7_back[3] = {39, 81, 30};
 
 int   calibration_white_back[3] = {30, 30, 30};
 int   calibration_black_back[3] = {4, 4, 4};
+*/
 int   white_D[7] = {59, 61, 61, 71, 59, 62, 86};
 int   black_D[7] = {110, 108, 102, 120, 93, 104, 121};
 long  cumulative_calibration_data[18][3];
-long  calibration_counter;
+long calibration_counter_white;
+long calibration_counter;
 long W_distance[2], B_distance[2], color_1_distance[2], color_2_distance[2], color_3_distance[2], color_4_distance[2], color_5_distance[2], color_6_distance[2], color_7_distance[2];
 String print_text;
 
@@ -92,11 +97,13 @@ byte  BIN_DATA, line_sensor_bin_data, Wire_Read;
 //byte  analyse_defferent_light_digit;
 byte  distance_Serial[2];
 unsigned long timer[3];
+/*
 int   g_flag = 0;     // filter of RGB queue
 int   RGB_value_back[3];
 int   g_array_temporarily[3][2];
 int   g_count_back = 0;    // count the frequecy
 int   g_array_back[3];     // store the RGB value
+*/
 
 
 //light_sensor Begin
@@ -115,26 +122,29 @@ void setup() {
   Wire.onReceive(receiveEvent);         // register event
 
   //color_sensor_setup
+  /*
   Timer1.initialize(10000);             // 5000us = 5ms
   Timer1.attachInterrupt(TSC_Callback);
   pinMode(S2, OUTPUT);
   pinMode(S3, OUTPUT);
   pinMode(color_sensor_output_back, INPUT);
   attachInterrupt(digitalPinToInterrupt(color_sensor_output_back), TSC_Count2, RISING);
+  */
 
   //read data from EEPROM
     for (byte i = 0; i <= 12 ; i += 2)    EEPROM.get(i, white_D[i / 2]);
     for (byte i = 15; i <= 27 ; i += 2)   EEPROM.get(i, black_D[(i - 15) / 2]);
-
+/*
     for (byte i = 51; i <= 55 ; i += 2)   EEPROM.get(i, calibration_white_back[(i - 51) / 2]);
     for (byte i = 58; i <= 62 ; i += 2)   EEPROM.get(i, calibration_black_back[(i - 58) / 2]);
     for (byte i = 65; i <= 69 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 65) / 2]);
-    for (byte i = 72; i <= 76 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 72) / 2]);
-    for (byte i = 79; i <= 83 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 79) / 2]);
-    for (byte i = 86; i <= 90 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 86) / 2]);
-    for (byte i = 93; i <= 97 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 93) / 2]);
-    for (byte i = 100; i <= 104 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 100) / 2]);
-    for (byte i = 107; i <= 111 ; i += 2)   EEPROM.get(i, calibration_color_1_back[(i - 107) / 2]);
+    for (byte i = 72; i <= 76 ; i += 2)   EEPROM.get(i, calibration_color_2_back[(i - 72) / 2]);
+    for (byte i = 79; i <= 83 ; i += 2)   EEPROM.get(i, calibration_color_3_back[(i - 79) / 2]);
+    for (byte i = 86; i <= 90 ; i += 2)   EEPROM.get(i, calibration_color_4_back[(i - 86) / 2]);
+    for (byte i = 93; i <= 97 ; i += 2)   EEPROM.get(i, calibration_color_5_back[(i - 93) / 2]);
+    for (byte i = 100; i <= 104 ; i += 2)   EEPROM.get(i, calibration_color_6_back[(i - 100) / 2]);
+    for (byte i = 107; i <= 111 ; i += 2)   EEPROM.get(i, calibration_color_7_back[(i - 107) / 2]);
+    */
 
   pinMode(multiplexer_counter_S2, OUTPUT);
   pinMode(multiplexer_counter_S1, OUTPUT);
@@ -168,10 +178,10 @@ void loop() {
     }
     //calibrating
     else if (calibrating == HIGH && Wire_Read == 10) {
-      if (calibration_counter > 0) {
+      if (calibration_counter_white > 0) {
         if (raw_light_sensor_data[counter] < black_D[counter])  black_D[counter] = raw_light_sensor_data[counter];
         if (raw_light_sensor_data[counter] > white_D[counter])  white_D[counter] = raw_light_sensor_data[counter];
-        calibration_counter--;
+        calibration_counter_white--;
       }
       else {
         calibrating = LOW;
@@ -185,27 +195,21 @@ void loop() {
       line_sensor_bin_data = BIN_DATA;
   //    analyse_defferent_light_digit = analyse_defferent_light_data();  //   Wrong is 1 | True is 0
       if (debug_line_sensor_data == HIGH) {
-       /* Serial.print(print_text);
+        Serial.print(print_text);
         Serial.print("   Wire_Read   ");
         Serial.print(Wire_Read);
         Serial.print("  calibration_counter:  ");
         Serial.print(calibration_counter);
-        Serial.print("  array_back ");
-        Serial.print(g_array_back[0]);
-        Serial.print(",");
-        Serial.print(g_array_back[1]);
-        Serial.print(",");
-        Serial.print(g_array_back[2]);
         Serial.print("  line_sensor_bin_data ");
         Serial.print(line_sensor_bin_data,BIN);
         Serial.print("    distance_Serial_back ");
         Serial.println(distance_Serial[1]);
-        print_text = "";*/
-        Serial.print(calibrating);
+        print_text = "";
+       /* Serial.print(calibrating);
         Serial.print("   counter: ");
         Serial.print(calibration_counter);
         Serial.print("   Wire_Read: ");
-        Serial.println(Wire_Read);
+        Serial.println(Wire_Read);   */
       }
     }
     L2 = bitRead(counter, 2);
@@ -220,7 +224,7 @@ void loop() {
 }
 
 
-
+/*
 void TSC_Callback() {
   if (g_flag == 0) {                       //Filter without Red
     g_count_back = 0;
@@ -270,10 +274,10 @@ void TSC_Callback() {
 
   }
 }
+*/
 
 
-
-
+/*
 void get_color_senor_value() {
   W_distance[1] = (g_array_back[0] - calibration_white_back[0]) * (g_array_back[0] - calibration_white_back[0]) + (g_array_back[1] - calibration_white_back[1]) * (g_array_back[1] - calibration_white_back[1]) + (g_array_back[2] - calibration_white_back[2]) * (g_array_back[2] - calibration_white_back[2]);
   B_distance[1] = (g_array_back[0] - calibration_black_back[0]) * (g_array_back[0] - calibration_black_back[0]) + (g_array_back[1] - calibration_black_back[1]) * (g_array_back[1] - calibration_black_back[1]) + (g_array_back[2] - calibration_black_back[2]) * (g_array_back[2] - calibration_black_back[2]);
@@ -317,22 +321,25 @@ void get_color_senor_value() {
 void TSC_Count2() {
   g_count_back ++ ;
 }
-
+*/
 
 void requestEvent() { 
-  byte i2c_sending[2];
+  byte i2c_sending[1];
   i2c_sending[0] = line_sensor_bin_data;
-  i2c_sending[1] = distance_Serial[1];
-  Wire.write(i2c_sending, 2);
+ // i2c_sending[1] = distance_Serial[1];
+  Wire.write(i2c_sending[0]);
 }
 
 
 
 void receiveEvent(int howMany) {
   Wire_Read = Wire.read();
+  if(Wire_Read != 11){
   calibrating = HIGH;
   calibration_counter = calibration_counter_time;
-  if (Wire_Read == 11) {
+  calibration_counter_white = calibration_counter_time_white;
+}
+  if (Wire_Read == 10) {
     for (int i = 0; i <= 6 ; i++)	black_D[i] = 1023;
     for (int i = 0; i <= 6 ; i++)	white_D[i] = 0;
   }
@@ -340,21 +347,20 @@ void receiveEvent(int howMany) {
 
     for (byte i = 0; i <= 12 ; i += 2)    EEPROM.put(i, white_D[i / 2]);
     for (byte i = 15; i <= 27 ; i += 2)   EEPROM.put(i, black_D[(i - 15) / 2]);
-
+/*
     for (byte i = 51; i <= 55 ; i += 2)   EEPROM.put(i, calibration_white_back[(i - 51) / 2]);
     for (byte i = 58; i <= 62 ; i += 2)   EEPROM.put(i, calibration_black_back[(i - 58) / 2]);
     for (byte i = 65; i <= 69 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 65) / 2]);
-    for (byte i = 72; i <= 76 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 72) / 2]);
-    for (byte i = 79; i <= 83 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 79) / 2]);
-    for (byte i = 86; i <= 90 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 86) / 2]);
-    for (byte i = 93; i <= 97 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 93) / 2]);
-    for (byte i = 100; i <= 104 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 100) / 2]);
-    for (byte i = 107; i <= 111 ; i += 2)   EEPROM.put(i, calibration_color_1_back[(i - 107) / 2]);
-
-
-    calibrating = LOW;
+    for (byte i = 72; i <= 76 ; i += 2)   EEPROM.put(i, calibration_color_2_back[(i - 72) / 2]);
+    for (byte i = 79; i <= 83 ; i += 2)   EEPROM.put(i, calibration_color_3_back[(i - 79) / 2]);
+    for (byte i = 86; i <= 90 ; i += 2)   EEPROM.put(i, calibration_color_4_back[(i - 86) / 2]);
+    for (byte i = 93; i <= 97 ; i += 2)   EEPROM.put(i, calibration_color_5_back[(i - 93) / 2]);
+    for (byte i = 100; i <= 104 ; i += 2)   EEPROM.put(i, calibration_color_6_back[(i - 100) / 2]);
+    for (byte i = 107; i <= 111 ; i += 2)   EEPROM.put(i, calibration_color_7_back[(i - 107) / 2]);
+*/
+    
     Wire_Read = 0;
-    calibration_counter == 0;
+    calibration_counter = 0;
   }
 
 
@@ -363,6 +369,7 @@ void receiveEvent(int howMany) {
 
 
 void color_data_calibration() {
+  /*
   if (Wire_Read == 1) {
     if (calibration_counter > 0) {                              //White calabration
       for (int i = 0; i <= 2; i++) {
@@ -519,6 +526,8 @@ void color_data_calibration() {
       Wire_Read = 0;
     }
     }
+    */
   }
+  
 
   
